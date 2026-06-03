@@ -1,0 +1,106 @@
+name: amd64
+on:
+  push:
+    branches:
+      - amd64-*
+    tags:
+      - release-amd64-*
+  pull_request:
+    branches:
+      - amd64-*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: debian:13
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Print branch name
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "${{ github.base_ref }} (PR target)"
+          else
+            echo ${{ github.ref_name }}
+          fi
+      - name: Extract moby branch
+        id: extract
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            REF=${{ github.base_ref }}
+          else
+            REF=${{ github.ref_name }}
+          fi
+          echo "REF=$REF"
+          RAW_VERSION=$(echo $REF | awk -F'amd64-' '{print $2}')
+          echo "RAW_VERSION=$RAW_VERSION"
+          MOBY_BRANCH=$(echo $RAW_VERSION | awk -F'+' '{print $1}')
+          echo "MOBY_BRANCH=$MOBY_BRANCH"
+          echo "MOBY_BRANCH=$MOBY_BRANCH" >> ${GITHUB_ENV}
+          if echo "$RAW_VERSION" | grep -qE '[+].*(alpha|beta|rc)'; then
+            IS_STABLE=false
+          else
+            IS_STABLE=true
+          fi
+          echo "IS_STABLE=$IS_STABLE"
+          echo "IS_STABLE=$IS_STABLE" >> ${GITHUB_OUTPUT}
+      - name: Install build tools
+        run: |
+          apt update
+          apt install -y git make golang file
+      - name: Clone moby
+        run: |
+          git clone --branch ${{ env.MOBY_BRANCH }} --depth 1 https://github.com/moby/moby.git moby
+      - name: ls
+        run: ls -lah
+      #- name: Apply patches
+      #  working-directory: moby
+      #  run: git apply ../*.patch
+      - name: Build moby
+        working-directory: moby
+        env:
+          GOOS: linux
+          GOARCH: amd64
+        run: |
+          mkdir -p bundles/binary
+          go build -o bundles/binary/dockerd ./cmd/dockerd
+          go build -o bundles/binary/docker-proxy ./cmd/docker-proxy
+      - name: Print binary SHA-256 checksums
+        working-directory: moby
+        run: |
+          find ./bundles -type f | xargs sha256sum
+      - name: Inspect binary file types
+        working-directory: moby
+        run: |
+          echo "=== bin ==="
+          file bundles/**/**
+      - name: Upload binaries
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: moby-amd64-binaries
+          path: |
+            moby/bundles/*
+
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download binaries
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: moby-amd64-binaries
+          path: amd64-artifacts
+      - name: Create Release
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        with:
+          name: ${{ github.ref_name }}
+          prerelease: ${{ env.IS_STABLE == 'false' }}
+          make_latest: ${{ env.IS_STABLE == 'true' && 'legacy' || 'false' }}
+          files: |
+            amd64-artifacts/**
