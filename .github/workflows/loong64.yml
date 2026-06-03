@@ -46,15 +46,15 @@ jobs:
           fi
           echo "IS_STABLE=$IS_STABLE"
           echo "IS_STABLE=$IS_STABLE" >> ${GITHUB_OUTPUT}
+      - name: Install build tools
+        run: |
+          apt update
+          apt install -y git make golang file
       - name: Clone moby
         run: |
           git clone --branch ${{ env.MOBY_BRANCH }} --depth 1 https://github.com/moby/moby.git moby
       - name: ls
         run: ls -lah
-      - name: Install build tools
-        run: |
-          apt update
-          apt install -y git make golang file
       - name: Install Docker CLI
         run: |
           apt remove $(dpkg --get-selections docker.io docker-compose docker-doc podman-docker containerd runc | cut -f1)
