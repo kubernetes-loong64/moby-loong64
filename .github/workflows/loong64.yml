@@ -85,16 +85,15 @@ jobs:
       - name: Build moby
         working-directory: moby
         run: make
-      #- name: Print binary SHA-256 checksums
-      #  working-directory: moby
-      #  run: |
-      #    find bin -type f | xargs sha256sum
+      - name: Print binary SHA-256 checksums
+        working-directory: moby
+        run: |
+          find ./bundles -type f | xargs sha256sum
       - name: Inspect binary file types
         working-directory: moby
         run: |
-          # echo "=== bin ==="
-          # file bin/*
-          ls -lah
+          echo "=== bin ==="
+          file bundles/*
       #- name: Upload binaries
       #  uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       #  with:
