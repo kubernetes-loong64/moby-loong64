@@ -47,11 +47,8 @@ jobs:
           echo "IS_STABLE=$IS_STABLE"
           echo "IS_STABLE=$IS_STABLE" >> ${GITHUB_OUTPUT}
       - name: Clone moby
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          repository: moby/moby
-          ref: ${{ env.MOBY_BRANCH }}
-          path: moby
+        run: |
+          git clone --branch ${{ env.MOBY_BRANCH }} --depth 1 https://github.com/moby/moby.git moby
       - name: ls
         run: ls -lah
       - name: Install build tools
