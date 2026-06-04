@@ -87,7 +87,10 @@ jobs:
         env:
           GOOS: linux
           GOARCH: loong64
-        run: go build -o dockerd ./cmd/dockerd
+        run: |
+          mkdir bundles
+          go build -o bundles/dockerd ./cmd/dockerd
+          go build -o bundles/docker-proxy ./cmd/docker-proxy
       - name: Print binary SHA-256 checksums
         working-directory: moby
         run: |
@@ -97,7 +100,6 @@ jobs:
         run: |
           echo "=== bin ==="
           file bundles/**/**
-          file dockerd
       - name: Upload binaries
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
