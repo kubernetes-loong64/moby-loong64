@@ -87,7 +87,7 @@ jobs:
         env:
           GOOS: linux
           GOARCH: loong64
-        run: make
+        run: go build -o dockerd ./cmd/dockerd
       - name: Print binary SHA-256 checksums
         working-directory: moby
         run: |
