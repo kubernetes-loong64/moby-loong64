@@ -64,9 +64,7 @@ jobs:
           GOOS: linux
           GOARCH: amd64
         run: |
-          mkdir -p bundles/binary
-          go build -o bundles/binary/dockerd ./cmd/dockerd
-          go build -o bundles/binary/docker-proxy ./cmd/docker-proxy
+          make
       - name: Print binary SHA-256 checksums
         working-directory: moby
         run: |
