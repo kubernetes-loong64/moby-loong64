@@ -88,9 +88,9 @@ jobs:
           GOOS: linux
           GOARCH: loong64
         run: |
-          mkdir bundles
-          go build -o bundles/dockerd ./cmd/dockerd
-          go build -o bundles/docker-proxy ./cmd/docker-proxy
+          mkdir -p bundles/binary
+          go build -o bundles/binary/dockerd ./cmd/dockerd
+          go build -o bundles/binary/docker-proxy ./cmd/docker-proxy
       - name: Print binary SHA-256 checksums
         working-directory: moby
         run: |
