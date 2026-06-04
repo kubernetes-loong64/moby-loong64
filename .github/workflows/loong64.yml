@@ -84,6 +84,9 @@ jobs:
       #  run: git apply ../*.patch
       - name: Build moby
         working-directory: moby
+        env:
+          GOOS: linux
+          GOARCH: loong64
         run: make
       - name: Print binary SHA-256 checksums
         working-directory: moby
