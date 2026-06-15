@@ -455,6 +455,12 @@ jobs:
       DEBIAN_DEB_NAME: ${{ needs.deb-debian.outputs.DEBIAN_DEB_NAME }}
       IS_STABLE: ${{ needs.build.outputs.IS_STABLE }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Copy systemd service file
+        run: |
+          mkdir -p loong64-artifacts
+          cp systemd/docker.service loong64-artifacts/docker.service
       - name: Download binaries
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -504,6 +510,7 @@ jobs:
           |------------------------------|------------------------------------------------------------------------------|
           | `dockerd`                    | [dockerd](${{ env.BASE_URL }}/dockerd)                                       |
           | `docker-proxy`               | [docker-proxy](${{ env.BASE_URL }}/docker-proxy)                             |
+          | `docker.service`            | [docker.service](${{ env.BASE_URL }}/docker.service)                         |
           | `${{ env.ANOLIS_RPM_NAME }}` | [${{ env.ANOLIS_RPM_NAME }}](${{ env.BASE_URL }}/${{ env.ANOLIS_RPM_NAME }}) |
           | `${{ env.DEBIAN_DEB_NAME }}` | [${{ env.DEBIAN_DEB_NAME }}](${{ env.BASE_URL }}/${{ env.DEBIAN_DEB_NAME }}) |
 
@@ -515,6 +522,10 @@ jobs:
           curl -LO ${{ env.BASE_URL }}/dockerd.asc
           curl -LO ${{ env.BASE_URL }}/docker-proxy
           curl -LO ${{ env.BASE_URL }}/docker-proxy.asc
+
+          # systemd service
+          curl -LO ${{ env.BASE_URL }}/docker.service
+          curl -LO ${{ env.BASE_URL }}/docker.service.asc
 
           # RPM (Anolis)
           curl -LO ${{ env.BASE_URL }}/${{ env.ANOLIS_RPM_NAME }}
@@ -531,6 +542,15 @@ jobs:
           gpg --keyserver keys.openpgp.org --recv-keys FCF8724722CCBF9F51B1FBE376532BE7E3013105
           echo "FCF8724722CCBF9F51B1FBE376532BE7E3013105:6:" | gpg --import-ownertrust
           gpg --verify <file>.asc <file>
+          ```
+
+          ## Installing systemd service
+
+          ```shell
+          sudo cp docker.service /etc/systemd/system/docker.service
+          sudo systemctl daemon-reload
+          sudo systemctl enable docker.service
+          sudo systemctl start docker.service
           ```
           BODYEOF
       - name: Create Release
