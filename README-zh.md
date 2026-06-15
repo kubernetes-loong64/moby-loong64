@@ -61,6 +61,10 @@ echo "FCF8724722CCBF9F51B1FBE376532BE7E3013105:6:" | gpg --import-ownertrust
 gpg --import /tmp/xxx
 ```
 
+## 参考仓库
+
+- [src-anolis-os/docker](https://gitee.com/src-anolis-os/docker)
+
 ## 许可证
 
 [Apache License 2.0](LICENSE)

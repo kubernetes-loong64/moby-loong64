@@ -63,6 +63,10 @@ Or download the key file manually and import it:
 gpg --import /tmp/xxx
 ```
 
+## Reference repositories
+
+- [src-anolis-os/docker](https://gitee.com/src-anolis-os/docker)
+
 ## License
 
 [Apache License 2.0](LICENSE)
