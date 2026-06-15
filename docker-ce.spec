@@ -25,6 +25,9 @@ mkdir -p %{buildroot}/usr/bin/
 install -m 755 dockerd %{buildroot}/usr/bin/dockerd
 install -m 755 docker-proxy %{buildroot}/usr/bin/docker-proxy
 
+mkdir -p %{buildroot}/usr/lib/systemd/system/
+install -m 644 systemd/docker.service %{buildroot}/usr/lib/systemd/system/docker.service
+
 mkdir -p %{buildroot}/usr/share/bash-completion/completions/
 install -m 644 completions/dockerd.bash %{buildroot}/usr/share/bash-completion/completions/dockerd
 
@@ -44,9 +47,19 @@ install -m 644 LICENSE %{buildroot}/usr/share/licenses/%{name}/LICENSE
 %license /usr/share/licenses/%{name}/LICENSE
 /usr/bin/dockerd
 /usr/bin/docker-proxy
+/usr/lib/systemd/system/docker.service
 /usr/share/man/man1/dockerd.1*
 /usr/share/bash-completion/completions/dockerd
 /usr/share/fish/vendor_completions.d/dockerd.fish
 /usr/share/zsh/site-functions/_dockerd
+
+%post
+%systemd_post docker.service
+
+%preun
+%systemd_preun docker.service
+
+%postun
+%systemd_postun_with_restart docker.service
 
 %changelog

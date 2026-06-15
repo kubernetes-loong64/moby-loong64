@@ -230,6 +230,7 @@ jobs:
           cp artifacts/binary/docker-proxy ~/rpmbuild/BUILD/
           cp -r artifacts/completions ~/rpmbuild/BUILD/
           cp -r artifacts/man ~/rpmbuild/BUILD/
+          cp -r systemd ~/rpmbuild/BUILD/
           cp LICENSE ~/rpmbuild/BUILD/
           cp docker-ce.spec ~/rpmbuild/SPECS/
           rpmbuild -ba --target ${{ env.ARCH }} ~/rpmbuild/SPECS/docker-ce.spec \
@@ -349,6 +350,7 @@ jobs:
           mkdir -p $PKG_ROOT/usr/share/fish/vendor_completions.d
           mkdir -p $PKG_ROOT/usr/share/zsh/site-functions
           mkdir -p $PKG_ROOT/usr/share/doc/docker-ce
+          mkdir -p $PKG_ROOT/usr/lib/systemd/system
           mkdir -p $PKG_ROOT/DEBIAN
 
           install -m 755 artifacts/binary/dockerd $PKG_ROOT/usr/bin/dockerd
@@ -358,6 +360,7 @@ jobs:
           install -m 644 artifacts/completions/_dockerd.zsh $PKG_ROOT/usr/share/zsh/site-functions/_dockerd
           install -m 644 artifacts/man/dockerd.1 $PKG_ROOT/usr/share/man/man1/dockerd.1
           install -m 644 LICENSE $PKG_ROOT/usr/share/doc/docker-ce/copyright
+          install -m 644 systemd/docker.service $PKG_ROOT/usr/lib/systemd/system/docker.service
 
           cat > $PKG_ROOT/DEBIAN/control << EOF
           Package: docker-ce
@@ -370,6 +373,36 @@ jobs:
           Section: admin
           Priority: optional
           EOF
+
+          cat > $PKG_ROOT/DEBIAN/postinst << 'SCRIPTEOF'
+          #!/bin/sh
+          set -e
+          if [ -d /run/systemd/system ]; then
+            systemctl daemon-reload 2>/dev/null || true
+            deb-systemd-invoke enable docker.service >/dev/null 2>&1 || true
+            deb-systemd-invoke start docker.service >/dev/null 2>&1 || true
+          fi
+          SCRIPTEOF
+          chmod 755 $PKG_ROOT/DEBIAN/postinst
+
+          cat > $PKG_ROOT/DEBIAN/prerm << 'SCRIPTEOF'
+          #!/bin/sh
+          set -e
+          if [ -d /run/systemd/system ]; then
+            deb-systemd-invoke stop docker.service >/dev/null 2>&1 || true
+          fi
+          SCRIPTEOF
+          chmod 755 $PKG_ROOT/DEBIAN/prerm
+
+          cat > $PKG_ROOT/DEBIAN/postrm << 'SCRIPTEOF'
+          #!/bin/sh
+          set -e
+          if [ "$1" = "remove" ] && [ -d /run/systemd/system ]; then
+            systemctl daemon-reload 2>/dev/null || true
+            systemctl reset-failed docker.service 2>/dev/null || true
+          fi
+          SCRIPTEOF
+          chmod 755 $PKG_ROOT/DEBIAN/postrm
 
           mkdir -p debs
           dpkg-deb --build $PKG_ROOT debs/
