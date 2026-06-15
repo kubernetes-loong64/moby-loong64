@@ -18,6 +18,7 @@ jobs:
       MOBY_BRANCH: ${{ steps.extract.outputs.MOBY_BRANCH }}
       RELEASE: ${{ steps.extract.outputs.RELEASE }}
       IS_STABLE: ${{ steps.extract.outputs.IS_STABLE }}
+      VERSION: ${{ steps.extract.outputs.VERSION }}
     permissions:
       contents: read
     steps:
@@ -47,6 +48,10 @@ jobs:
           echo "MOBY_BRANCH=$MOBY_BRANCH"
           echo "MOBY_BRANCH=$MOBY_BRANCH" >> ${GITHUB_ENV}
           echo "MOBY_BRANCH=$MOBY_BRANCH" >> ${GITHUB_OUTPUT}
+          VERSION=$(echo $MOBY_BRANCH | awk -F'v' '{print $2}')
+          echo "VERSION=$VERSION"
+          echo "VERSION=$VERSION" >> ${GITHUB_ENV}
+          echo "VERSION=$VERSION" >> ${GITHUB_OUTPUT}
           RELEASE=$(echo $RAW_VERSION | awk -F'+' '{print $2}')
           RELEASE=${RELEASE:-alpha.${{ github.run_number }}}
           echo "RELEASE=$RELEASE"
@@ -101,9 +106,20 @@ jobs:
           GOOS: linux
           GOARCH: loong64
         run: |
+          echo "VERSION=$VERSION"
+          GITCOMMIT=$(git rev-parse HEAD)
+          echo "GITCOMMIT=$GITCOMMIT"
+          BUILDTIME=$(date -u -d "@${SOURCE_DATE_EPOCH:-$(date +%s)}" --rfc-3339 ns 2>/dev/null | sed -e 's/ /T/')
+          echo "BUILDTIME=$BUILDTIME"
+          LDFLAGS="-X github.com/moby/moby/v2/dockerversion.Version=${VERSION}"
+          echo "LDFLAGS=$LDFLAGS"
+          LDFLAGS="${LDFLAGS} -X github.com/moby/moby/v2/dockerversion.GitCommit=${GITCOMMIT}"
+          echo "LDFLAGS=$LDFLAGS"
+          LDFLAGS="${LDFLAGS} -X github.com/moby/moby/v2/dockerversion.BuildTime=${BUILDTIME}"
+          echo "LDFLAGS=$LDFLAGS"
           mkdir -p bundles/binary
-          go build -o bundles/binary/dockerd ./cmd/dockerd
-          go build -o bundles/binary/docker-proxy ./cmd/docker-proxy
+          go build -ldflags "${LDFLAGS}" -o bundles/binary/dockerd ./cmd/dockerd
+          go build -ldflags "${LDFLAGS}" -o bundles/binary/docker-proxy ./cmd/docker-proxy
       - name: Print binary SHA-256 checksums
         working-directory: moby
         run: |
@@ -177,16 +193,14 @@ jobs:
       MOBY_BRANCH: ${{ needs.build.outputs.MOBY_BRANCH }}
       RELEASE: ${{ needs.build.outputs.RELEASE }}
       ARCH: loongarch64
+      VERSION: ${{ needs.build.outputs.VERSION }}
     steps:
       - name: Install gzip
         run: yum install -y gzip
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Extract version
+      - name: Extract dist
         run: |
-          VERSION=$(echo $MOBY_BRANCH | awk -F'v' '{print $2}')
-          echo "VERSION=$VERSION"
-          echo "VERSION=$VERSION" >> ${GITHUB_ENV}
           DIST=$(rpm --eval '%{dist}')
           echo "DIST=$DIST"
           echo "DIST=$DIST" >> ${GITHUB_ENV}
@@ -303,6 +317,7 @@ jobs:
       MOBY_BRANCH: ${{ needs.build.outputs.MOBY_BRANCH }}
       RELEASE: ${{ needs.build.outputs.RELEASE }}
       ARCH: loongarch64
+      VERSION: ${{ needs.build.outputs.VERSION }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -310,11 +325,6 @@ jobs:
         run: |
           apt update
           apt install -y file
-      - name: Extract version
-        run: |
-          VERSION=$(echo $MOBY_BRANCH | awk -F'v' '{print $2}')
-          echo "VERSION=$VERSION"
-          echo "VERSION=$VERSION" >> ${GITHUB_ENV}
       - name: Download binaries
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
