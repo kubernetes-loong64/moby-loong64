@@ -54,12 +54,19 @@ install -m 644 LICENSE %{buildroot}/usr/share/licenses/%{name}/LICENSE
 /usr/share/zsh/site-functions/_dockerd
 
 %post
-%systemd_post docker.service
+echo "=== docker-ce installed ==="
+echo "systemd service file: /usr/lib/systemd/system/docker.service"
+echo "Install service:"
+echo "  sudo systemctl daemon-reload"
+echo "  sudo systemctl enable docker.service"
+echo "  sudo systemctl start docker.service"
 
 %preun
-%systemd_preun docker.service
-
-%postun
-%systemd_postun_with_restart docker.service
+echo "=== docker-ce uninstalling ==="
+echo "Stop and remove service before uninstalling:"
+echo "  sudo systemctl stop docker.service 2>/dev/null || true"
+echo "  sudo systemctl disable docker.service 2>/dev/null || true"
+echo "  sudo rm -f /etc/systemd/system/docker.service"
+echo "  sudo systemctl daemon-reload"
 
 %changelog
