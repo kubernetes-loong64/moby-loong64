@@ -65,7 +65,7 @@ jobs:
           apt install -y git make golang file
       - name: Clone moby
         run: |
-          git clone --branch ${{ env.MOBY_BRANCH }} --depth 1 https://github.com/moby/moby.git moby
+          git clone --branch ${{ env.MOBY_BRANCH }} https://github.com/moby/moby.git moby
       - name: ls
         run: ls -lah
       - name: Install Docker CLI
