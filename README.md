@@ -17,12 +17,12 @@ rationale behind the Debian 13 container choice.
 
 ## Branch naming
 
-Push a branch named `loong64-<moby-version>` (e.g. `loong64-docker-v29.5.1`) to trigger a build. Append `+<build>`
-(e.g. `loong64-docker-v29.5.1+0`) to include build metadata.
+Push a branch named `loong64-<moby-version>` (e.g. `loong64-docker-v29.6.1`) to trigger a build. Append `+<build>`
+(e.g. `loong64-docker-v29.6.1+0`) to include build metadata.
 
 ## [Release](https://github.com/kubernetes-loong64/moby-loong64/releases)
 
-Push a tag matching `release-loong64-<moby-version>` (e.g. `release-loong64-docker-v29.5.1+0`) to publish
+Push a tag matching `release-loong64-<moby-version>` (e.g. `release-loong64-docker-v29.6.1+0`) to publish
 a GitHub Release with the built binaries.
 
 The `+<build>` suffix provides build metadata (e.g. `+0`, `+1-alpha.1`).
