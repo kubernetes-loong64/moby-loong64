@@ -11,6 +11,8 @@ Packager: 徐晓伟 <xuxiaowei@xuxiaowei.com.cn>
 %global _build_id_links none
 %define __strip /bin/true
 
+Requires: iptables
+
 %description
 Docker Engine (dockerd and docker-proxy) binaries for the loong64 (LoongArch) architecture.
 
