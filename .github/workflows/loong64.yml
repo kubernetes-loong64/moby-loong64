@@ -384,6 +384,7 @@ jobs:
           Version: ${{ env.VERSION }}-${{ env.RELEASE }}~${{ env.ID_VERSION_ID }}~${{ env.DEBIAN_VERSION_CODENAME }}
           Architecture: ${{ env.ARCH }}
           Maintainer: 徐晓伟 <xuxiaowei@xuxiaowei.com.cn>
+          Depends: iptables
           Description: Docker Engine (loong64)
            Docker Engine (dockerd and docker-proxy) binaries for the loong64 (LoongArch) architecture.
           Homepage: https://github.com/kubernetes-loong64/moby-loong64
